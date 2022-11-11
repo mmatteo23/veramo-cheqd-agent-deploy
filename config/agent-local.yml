@@ -59,6 +59,11 @@ constants:
     - createSelectiveDisclosureRequest
     - getVerifiableCredentialsForSdr
     - validatePresentationAgainstSdr
+    - cheqdCreateIdentifier
+    - cheqdUpdateIdentifier
+    - cheqdCreateResource
+    - cheqdGenerateDidDoc
+    - cheqdGenerateIdentityKeys
 
 # Data base
 dbConnection:
@@ -197,6 +202,11 @@ universal-resolver:
 did-key-resolver:
   $require: '@veramo/did-provider-key?t=function&p=/key#getDidKeyResolver'
 
+did-cheqd-resolver:
+  $require: '@cheqd/did-provider-cheqd?t=function&p=/cheqd#getResolver'
+  $args:
+    - url: 'https://resolver.cheqd.net/1.0/identifiers/'
+
 # Key Manager
 keyManager:
   $require: "@veramo/key-manager#KeyManager"
@@ -215,6 +225,22 @@ keyManager:
                 - $require: '@veramo/kms-local#SecretBox'
                   $args:
                     - $ref: /constants/secretKey
+
+didCheqdMainnetProvider:
+  $require: '@cheqd/did-provider-cheqd#CheqdDIDProvider'
+  $args:
+    - defaultKms: local
+      cosmosPayerMnemonic: '<your_mnemonic_phrase_goes_here>'
+      networkType: mainnet
+      rpcUrl: 'https://rpc.cheqd.net'
+
+didCheqdTestnetProvider:
+  $require: '@cheqd/did-provider-cheqd#CheqdDIDProvider'
+  $args:
+    - defaultKms: local
+      cosmosPayerMnemonic: '<your_mnemonic_phrase_goes_here>'
+      networkType: testnet
+      rpcUrl: 'https://rpc.cheqd.network'
 
 # DID Manager
 didManager:
@@ -250,6 +276,10 @@ didManager:
           $require: "@veramo/did-provider-key#KeyDIDProvider"
           $args:
             - defaultKms: local
+        did:cheqd:mainnet:
+          $ref: /didCheqdMainnetProvider
+        did:cheqd:testnet:
+          $ref: /didCheqdTestnetProvider
 
 didDiscovery:
   $require: '@veramo/did-discovery#DIDDiscovery'
@@ -292,3 +322,7 @@ agent:
         - $require: "@veramo/data-store#DataStoreORM"
           $args:
             - $ref: /dbConnection
+        - $require: '@cheqd/did-provider-cheqd#Cheqd'
+          $args:
+            - provider:
+                $ref: /didCheqdTestnetProvider
